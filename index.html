@@ -10,9 +10,7 @@
   <!-- Button, der die Vercel Serverless Function aufruft -->
   <button id="startPipeline">Pipeline starten</button>
 
-  <p>Klicke den Button, um die Azure DevOps Pipeline automatisch zu starten.</p>
-
- <script>
+<script>
 document.getElementById("startPipeline").addEventListener("click", async () => {
   try {
     const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
