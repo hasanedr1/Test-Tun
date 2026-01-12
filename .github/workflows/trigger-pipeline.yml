@@ -2,7 +2,7 @@ name: Trigger Azure Pipeline
 
 on:
   repository_dispatch:
-    types: [trigger-pipeline]  # entspricht event_type im Frontend
+    types: [trigger-pipeline]  # Muss mit Frontend Event übereinstimmen
 
 jobs:
   run-pipeline:
