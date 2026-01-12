@@ -12,21 +12,22 @@
 
   <p>Klicke den Button, um die Azure DevOps Pipeline automatisch zu starten.</p>
 
-  <script>
-    document.getElementById("start test - test plan 1 ").addEventListener("click", async () => {
-      try {
-        const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
-        const data = await res.json();
+ <script>
+document.getElementById("startPipeline").addEventListener("click", async () => {
+  try {
+    const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
+    const data = await res.json();
 
-        if (data.success) {
-          alert("Pipeline erfolgreich gestartet!");
-        } else {
-          alert("Fehler beim Starten der Pipeline: " + data.error);
-        }
-      } catch (err) {
-        alert("Netzwerk- oder Serverfehler: " + err.message);
-      }
-    });
-  </script>
+    if (data.success) {
+      alert("Pipeline erfolgreich gestartet!");
+    } else {
+      alert("Fehler beim Starten der Pipeline: " + data.error);
+    }
+  } catch (err) {
+    alert("Netzwerk- oder Serverfehler: " + err.message);
+  }
+});
+</script>
+
 </body>
 </html>
