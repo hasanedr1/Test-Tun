@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pipeline Trigger</title>
+</head>
+<body>
+  <h1>Azure DevOps Pipeline starten</h1>
+  <button id="startPipeline">Pipeline starten</button>
+
+  <script>
+    document.getElementById('startPipeline').addEventListener('click', async () => {
+      try {
+        // GitHub Actions Workflow triggern über API
+        const res = await fetch('https://api.github.com/repos/hasan.edrees/my-website/dispatches', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': 'token GITHUB_PERSONAL_ACCESS_TOKEN', // ACHTUNG: später ersetzen durch Secret
+          },
+          body: JSON.stringify({
+            event_type: 'trigger-pipeline'
+          })
+        });
+
+        alert(res.ok ? "Pipeline gestartet!" : "Fehler beim Triggern");
+      } catch (err) {
+        alert("Fehler: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
