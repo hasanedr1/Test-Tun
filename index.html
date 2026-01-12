@@ -7,12 +7,26 @@
 <body>
   <h1>Azure DevOps Pipeline starten</h1>
 
-  <!-- Sicherer Button: öffnet GitHub Actions Workflow -->
-  <button onclick="window.open('https://github.com/hasanedr1/Test-Tun/actions/workflows/trigger-pipeline.yml', '_blank')">
-    Pipeline starten
-  </button>
+  <!-- Button, der die Vercel Serverless Function aufruft -->
+  <button id="startPipeline">Pipeline starten</button>
 
-  <p>Klicke den Button und wähle "Run workflow" auf GitHub, um die Pipeline zu starten.</p>
+  <p>Klicke den Button, um die Azure DevOps Pipeline automatisch zu starten.</p>
 
+  <script>
+    document.getElementById("startPipeline").addEventListener("click", async () => {
+      try {
+        const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
+        const data = await res.json();
+
+        if (data.success) {
+          alert("Pipeline erfolgreich gestartet!");
+        } else {
+          alert("Fehler beim Starten der Pipeline: " + data.error);
+        }
+      } catch (err) {
+        alert("Netzwerk- oder Serverfehler: " + err.message);
+      }
+    });
+  </script>
 </body>
 </html>
