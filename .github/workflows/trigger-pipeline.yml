@@ -8,7 +8,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Azure DevOps Pipeline
+      - name: test neue starten 1 Dummy
         env:
           AZURE_ORG: ${{ secrets.AZURE_ORG }}
           AZURE_PROJECT: ${{ secrets.AZURE_PROJECT }}
