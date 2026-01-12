@@ -1,8 +1,8 @@
 name: Trigger Azure Pipeline
 
+# Dieser Trigger erlaubt manuelles Starten
 on:
-  repository_dispatch:
-    types: [trigger-pipeline]  # entspricht event_type im Frontend
+  workflow_dispatch:
 
 jobs:
   run-pipeline:
