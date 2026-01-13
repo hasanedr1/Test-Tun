@@ -36,7 +36,7 @@ document.getElementById("startPipeline").addEventListener("click", async () => {
     const data = await res.json();
 
     if (!data.success) {
-      alert("Fehler beim Starten der Pipeline: " + data.error);
+      
       statusEl.textContent = "Fehler beim Starten";
       return;
     }
@@ -62,7 +62,7 @@ document.getElementById("startPipeline").addEventListener("click", async () => {
         // If the pipeline is finished, stop polling
         if (["completed", "canceled", "failed"].includes(state.toLowerCase())) {
           clearInterval(interval);
-          alert("Pipeline abgeschlossen: " + state);
+          
         }
       } catch (err) {
         statusEl.textContent = "Fehler beim Abrufen des Status: " + err.message;
