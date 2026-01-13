@@ -1,39 +1,62 @@
-<button id="startPipeline">Pipeline starten</button>
+<button id="startPipeline">بدء Pipeline</button>
 <p id="status"></p>
 
 <script>
 const statusEl = document.getElementById("status");
 
 document.getElementById("startPipeline").onclick = async () => {
-  statusEl.innerText = "Pipeline wird gestartet...";
+  statusEl.innerText = "جارٍ بدء Pipeline...";
 
   try {
+    // بدء الـ Pipeline
     const startRes = await fetch("/api/start-pipeline", { method: "POST" });
-    const json = await startRes.json();
 
     if (!startRes.ok) {
-      statusEl.innerText = "Fehler beim Starten: " + (json.error || startRes.statusText);
+      const text = await startRes.text(); // لو رجع HTML أو نص
+      statusEl.innerText = "خطأ عند بدء Pipeline: " + text;
       return;
     }
 
+    const json = await startRes.json();
     const { runId } = json;
-    statusEl.innerText = "Pipeline gestartet, runId: " + runId;
 
-    // Status abfragen
+    if (!runId) {
+      statusEl.innerText = "خطأ: لم يتم استلام runId";
+      return;
+    }
+
+    statusEl.innerText = "تم بدء Pipeline، runId: " + runId;
+
+    // استعلام الحالة كل 5 ثواني
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/pipeline-status?runId=${runId}`);
+
+        if (!res.ok) {
+          const text = await res.text();
+          statusEl.innerText = "خطأ عند جلب الحالة: " + text;
+          clearInterval(interval);
+          return;
+        }
+
         const data = await res.json();
-        statusEl.innerText = JSON.stringify(data); // Einfach alles anzeigen
-        if (data.state?.toLowerCase() === "completed") clearInterval(interval);
+
+        // عرض كل شيء كـ JSON
+        statusEl.innerText = JSON.stringify(data);
+
+        // إيقاف الاستعلام عند الانتهاء
+        if (data.state && data.state.toLowerCase() === "completed") {
+          clearInterval(interval);
+        }
+
       } catch (err) {
-        statusEl.innerText = "Fehler beim Abrufen des Status: " + err.message;
+        statusEl.innerText = "خطأ عند جلب الحالة: " + err.message;
         clearInterval(interval);
       }
     }, 5000);
 
   } catch (err) {
-    statusEl.innerText = "Fehler beim Starten: " + err.message;
+    statusEl.innerText = "خطأ عند بدء Pipeline: " + err.message;
   }
 };
 </script>
