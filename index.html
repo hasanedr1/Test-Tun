@@ -7,31 +7,44 @@ const statusEl = document.getElementById("status");
 document.getElementById("startPipeline").onclick = async () => {
   statusEl.innerText = "Pipeline wird gestartet...";
 
-  const startRes = await fetch(
-    "https://azure-pipeline-trigger.vercel.app/api/start-pipeline",
-    { method: "POST" }
-  );
-
-  const { runId } = await startRes.json();
-
-  statusEl.innerText = "Tests laufen...";
-
-  const interval = setInterval(async () => {
-    const res = await fetch(
-      `https://azure-pipeline-trigger.vercel.app/api/pipeline-status?runId=${runId}`
+  try {
+    const startRes = await fetch(
+      "https://azure-pipeline-trigger.vercel.app/api/start-pipeline",
+      { method: "POST" }
     );
 
-    const data = await res.json();
+    const { runId } = await startRes.json();
 
-    if (data.state === "completed") {
-      clearInterval(interval);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `https://azure-pipeline-trigger.vercel.app/api/pipeline-status?runId=${runId}`
+        );
 
-      if (data.result === "succeeded") {
-        statusEl.innerText = "✅ Test PASSED";
-      } else {
-        statusEl.innerText = "❌ Test FAILED";
+        const data = await res.json();
+
+        // Immer den aktuellen state anzeigen
+        statusEl.innerText = `Status: ${data.state}` + (data.result ? `, Ergebnis: ${data.result}` : "");
+
+        // Wenn fertig, Interval stoppen
+        if (data.state === "completed") {
+          clearInterval(interval);
+          if (data.result === "succeeded") {
+            statusEl.innerText = "✅ Test PASSED";
+          } else {
+            statusEl.innerText = `❌ Test ${data.result.toUpperCase()}`;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = "Fehler beim Abrufen des Pipeline-Status";
+        clearInterval(interval);
       }
-    }
-  }, 5000);
+    }, 5000);
+
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = "Fehler beim Starten der Pipeline";
+  }
 };
 </script>
