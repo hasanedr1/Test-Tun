@@ -1,71 +1,51 @@
-<button id="startPipeline">بدء Pipeline</button>
+<button id="startPipeline">Start Pipeline</button>
 <p id="status"></p>
 
 <script>
 const statusEl = document.getElementById("status");
 
 document.getElementById("startPipeline").onclick = async () => {
-  statusEl.innerText = "جارٍ بدء Pipeline...";
+  statusEl.innerText = "Pipeline wird gestartet...";
 
   try {
-    // إرسال POST إلى API
     const startRes = await fetch("/api/start-pipeline", { method: "POST" });
 
-    // لو حدث خطأ HTTP، نقرأ النص مباشرة
     if (!startRes.ok) {
       const text = await startRes.text();
-      statusEl.innerText = "خطأ عند بدء Pipeline: " + text;
+      statusEl.innerText = "Fehler beim Starten: " + text;
       return;
     }
 
-    const json = await startRes.json();
-    const { runId } = json;
-
+    const { runId } = await startRes.json();
     if (!runId) {
-      statusEl.innerText = "خطأ: لم يتم استلام runId";
+      statusEl.innerText = "Fehler: Keine runId erhalten";
       return;
     }
 
-    statusEl.innerText = "تم بدء Pipeline، runId: " + runId;
+    statusEl.innerText = "Pipeline gestartet, runId: " + runId;
 
-    // استعلام الحالة كل 5 ثواني
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/pipeline-status?runId=${runId}`);
-
         if (!res.ok) {
           const text = await res.text();
-          statusEl.innerText = "خطأ عند جلب الحالة: " + text;
+          statusEl.innerText = "Fehler beim Abrufen: " + text;
           clearInterval(interval);
           return;
         }
 
         const data = await res.json();
-
-        // عرض الحالة بشكل واضح
-        let msg = `Status: ${data.state}`;
-        if (data.result) msg += `, Ergebnis: ${data.result}`;
-
-        statusEl.innerText = msg;
-
-        // إذا انتهت Pipeline، أضف ✅ أو ❌
-        if (data.state?.toLowerCase() === "completed") {
-          clearInterval(interval);
-          if (data.result?.toLowerCase() === "succeeded") {
-            statusEl.innerText = "✅ Test PASSED";
-          } else {
-            statusEl.innerText = `❌ Test ${data.result?.toUpperCase() || "FAILED"}`;
-          }
-        }
+        statusEl.innerText = `Status: ${data.state}, Ergebnis: ${data.result}`;
+        if (data.state?.toLowerCase() === "completed") clearInterval(interval);
 
       } catch (err) {
-        statusEl.innerText = "خطأ عند جلب الحالة: " + err.message;
+        statusEl.innerText = "Fehler beim Abrufen: " + err.message;
         clearInterval(interval);
       }
     }, 5000);
 
   } catch (err) {
-    statusEl.innerText = "خطأ عند بدء Pipeline: " + err.message;
+    statusEl.innerText = "Fehler beim Starten: " + err.message;
   }
 };
 </script>
