@@ -1,28 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Azure Pipeline Trigger</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #pipelineStatus {
+      font-weight: bold;
+      color: #0078d4; /* Azure blue */
+    }
+  </style>
 </head>
 <body>
   <h1>Azure DevOps Pipeline starten</h1>
 
-  <!-- Button, der die Vercel Serverless Function aufruft -->
   <button id="startPipeline">Pipeline starten</button>
+
+  <h2>Pipeline Status: <span id="pipelineStatus">Nicht gestartet</span></h2>
 
 <script>
 document.getElementById("startPipeline").addEventListener("click", async () => {
+  const statusEl = document.getElementById("pipelineStatus");
+
   try {
+    // Trigger the pipeline
     const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
     const data = await res.json();
 
-    if (data.success) {
-      alert("Pipeline erfolgreich gestartet!");
-    } else {
+    if (!data.success) {
       alert("Fehler beim Starten der Pipeline: " + data.error);
+      statusEl.textContent = "Fehler beim Starten";
+      return;
     }
+
+    const runId = data.runId;
+    statusEl.textContent = "Gestartet...";
+
+    // Poll pipeline status every 5 seconds
+    const interval = setInterval(async () => {
+      try {
+        const statusRes = await fetch(`https://azure-pipeline-trigger.vercel.app/api/get-status?runId=${runId}`);
+        const statusData = await statusRes.json();
+
+        if (!statusData.success) {
+          statusEl.textContent = "Fehler beim Abrufen des Status";
+          clearInterval(interval);
+          return;
+        }
+
+        const state = statusData.status;
+        statusEl.textContent = state;
+
+        // If the pipeline is finished, stop polling
+        if (["completed", "canceled", "failed"].includes(state.toLowerCase())) {
+          clearInterval(interval);
+          alert("Pipeline abgeschlossen: " + state);
+        }
+      } catch (err) {
+        statusEl.textContent = "Fehler beim Abrufen des Status: " + err.message;
+        clearInterval(interval);
+      }
+    }, 5000);
+
   } catch (err) {
-    alert("Netzwerk- oder Serverfehler: " + err.message);
+    statusEl.textContent = "Netzwerk- oder Serverfehler: " + err.message;
   }
 });
 </script>
