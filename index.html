@@ -1,31 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Azure Pipeline Trigger</title>
-</head>
-<body>
-  <h1>Azure DevOps Pipeline starten</h1>
-
-  <!-- Button, der die Vercel Serverless Function aufruft -->
-  <button id="startPipeline">Pipeline starten</button>
+<button id="startPipeline">Pipeline starten</button>
+<p id="status"></p>
 
 <script>
-document.getElementById("startPipeline").addEventListener("click", async () => {
-  try {
-    const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
+const statusEl = document.getElementById("status");
+
+document.getElementById("startPipeline").onclick = async () => {
+  statusEl.innerText = "Pipeline wird gestartet...";
+
+  const startRes = await fetch(
+    "https://azure-pipeline-trigger.vercel.app/api/start-pipeline",
+    { method: "POST" }
+  );
+
+  const { runId } = await startRes.json();
+
+  statusEl.innerText = "Tests laufen...";
+
+  const interval = setInterval(async () => {
+    const res = await fetch(
+      `https://azure-pipeline-trigger.vercel.app/api/pipeline-status?runId=${runId}`
+    );
+
     const data = await res.json();
 
-    if (data.success) {
-      alert("Pipeline erfolgreich gestartet!");
-    } else {
-      alert("Fehler beim Starten der Pipeline: " + data.error);
-    }
-  } catch (err) {
-    alert("Netzwerk- oder Serverfehler: " + err.message);
-  }
-});
-</script>
+    if (data.state === "completed") {
+      clearInterval(interval);
 
-</body>
-</html>
+      if (data.result === "succeeded") {
+        statusEl.innerText = "✅ Test PASSED";
+      } else {
+        statusEl.innerText = "❌ Test FAILED";
+      }
+    }
+  }, 5000);
+};
+</script>
