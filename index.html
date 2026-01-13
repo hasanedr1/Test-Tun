@@ -8,43 +8,32 @@ document.getElementById("startPipeline").onclick = async () => {
   statusEl.innerText = "Pipeline wird gestartet...";
 
   try {
-    const startRes = await fetch(
-      "https://azure-pipeline-trigger.vercel.app/api/start-pipeline",
-      { method: "POST" }
-    );
+    const startRes = await fetch("/api/start-pipeline", { method: "POST" });
+    const json = await startRes.json();
 
-    const { runId } = await startRes.json();
+    if (!startRes.ok) {
+      statusEl.innerText = "Fehler beim Starten: " + (json.error || startRes.statusText);
+      return;
+    }
 
+    const { runId } = json;
+    statusEl.innerText = "Pipeline gestartet, runId: " + runId;
+
+    // Status abfragen
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(
-          `https://azure-pipeline-trigger.vercel.app/api/pipeline-status?runId=${runId}`
-        );
-
+        const res = await fetch(`/api/pipeline-status?runId=${runId}`);
         const data = await res.json();
-
-        // Immer den aktuellen state anzeigen
-        statusEl.innerText = `Status: ${data.state}` + (data.result ? `, Ergebnis: ${data.result}` : "");
-
-        // Wenn fertig, Interval stoppen
-        if (data.state === "completed") {
-          clearInterval(interval);
-          if (data.result === "succeeded") {
-            statusEl.innerText = "✅ Test PASSED";
-          } else {
-            statusEl.innerText = `❌ Test ${data.result.toUpperCase()}`;
-          }
-        }
+        statusEl.innerText = JSON.stringify(data); // Einfach alles anzeigen
+        if (data.state?.toLowerCase() === "completed") clearInterval(interval);
       } catch (err) {
-        console.error(err);
-        statusEl.innerText = "Fehler beim Abrufen des Pipeline-Status";
+        statusEl.innerText = "Fehler beim Abrufen des Status: " + err.message;
         clearInterval(interval);
       }
     }, 5000);
 
   } catch (err) {
-    console.error(err);
-    statusEl.innerText = "Fehler beim Starten der Pipeline";
+    statusEl.innerText = "Fehler beim Starten: " + err.message;
   }
 };
 </script>
