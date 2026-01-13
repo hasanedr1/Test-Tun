@@ -8,11 +8,12 @@ document.getElementById("startPipeline").onclick = async () => {
   statusEl.innerText = "جارٍ بدء Pipeline...";
 
   try {
-    // بدء الـ Pipeline
+    // إرسال POST إلى API
     const startRes = await fetch("/api/start-pipeline", { method: "POST" });
 
+    // لو حدث خطأ HTTP، نقرأ النص مباشرة
     if (!startRes.ok) {
-      const text = await startRes.text(); // لو رجع HTML أو نص
+      const text = await startRes.text();
       statusEl.innerText = "خطأ عند بدء Pipeline: " + text;
       return;
     }
@@ -41,12 +42,20 @@ document.getElementById("startPipeline").onclick = async () => {
 
         const data = await res.json();
 
-        // عرض كل شيء كـ JSON
-        statusEl.innerText = JSON.stringify(data);
+        // عرض الحالة بشكل واضح
+        let msg = `Status: ${data.state}`;
+        if (data.result) msg += `, Ergebnis: ${data.result}`;
 
-        // إيقاف الاستعلام عند الانتهاء
-        if (data.state && data.state.toLowerCase() === "completed") {
+        statusEl.innerText = msg;
+
+        // إذا انتهت Pipeline، أضف ✅ أو ❌
+        if (data.state?.toLowerCase() === "completed") {
           clearInterval(interval);
+          if (data.result?.toLowerCase() === "succeeded") {
+            statusEl.innerText = "✅ Test PASSED";
+          } else {
+            statusEl.innerText = `❌ Test ${data.result?.toUpperCase() || "FAILED"}`;
+          }
         }
 
       } catch (err) {
@@ -60,4 +69,3 @@ document.getElementById("startPipeline").onclick = async () => {
   }
 };
 </script>
-
