@@ -1,51 +1,31 @@
-<button id="startPipeline">Start Pipeline</button>
-<p id="status"></p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Azure Pipeline Trigger</title>
+</head>
+<body>
+  <h1>Azure DevOps Pipeline starten</h1>
+
+  <!-- Button, der die Vercel Serverless Function aufruft -->
+  <button id="startPipeline">Pipeline starten</button>
 
 <script>
-const statusEl = document.getElementById("status");
-
-document.getElementById("startPipeline").onclick = async () => {
-  statusEl.innerText = "Pipeline wird gestartet...";
-
+document.getElementById("startPipeline").addEventListener("click", async () => {
   try {
-    const startRes = await fetch("/api/start-pipeline", { method: "POST" });
+    const res = await fetch("https://azure-pipeline-trigger.vercel.app/api/start-pipeline", { method: "POST" });
+    const data = await res.json();
 
-    if (!startRes.ok) {
-      const text = await startRes.text();
-      statusEl.innerText = "Fehler beim Starten: " + text;
-      return;
+    if (data.success) {
+      alert("Pipeline erfolgreich gestartet!");
+    } else {
+      alert("Fehler beim Starten der Pipeline: " + data.error);
     }
-
-    const { runId } = await startRes.json();
-    if (!runId) {
-      statusEl.innerText = "Fehler: Keine runId erhalten";
-      return;
-    }
-
-    statusEl.innerText = "Pipeline gestartet, runId: " + runId;
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/pipeline-status?runId=${runId}`);
-        if (!res.ok) {
-          const text = await res.text();
-          statusEl.innerText = "Fehler beim Abrufen: " + text;
-          clearInterval(interval);
-          return;
-        }
-
-        const data = await res.json();
-        statusEl.innerText = `Status: ${data.state}, Ergebnis: ${data.result}`;
-        if (data.state?.toLowerCase() === "completed") clearInterval(interval);
-
-      } catch (err) {
-        statusEl.innerText = "Fehler beim Abrufen: " + err.message;
-        clearInterval(interval);
-      }
-    }, 5000);
-
   } catch (err) {
-    statusEl.innerText = "Fehler beim Starten: " + err.message;
+    alert("Netzwerk- oder Serverfehler: " + err.message);
   }
-};
+});
 </script>
+
+</body>
+</html>
